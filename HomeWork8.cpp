@@ -1,103 +1,124 @@
+
 #include <iostream>
 using namespace std;
 
-int* AllocateArray(int size)
+int* CreateArray(int size)
 {
+    if (size <= 0) return nullptr;
     return new int[size];
 }
 
-void InitializeArray(int* array, int size)
+void InitializeArray(int* arr, int size)
 {
     for (int i = 0; i < size; i++)
-        cin >> array[i];
+    {
+        cout << "Element " << i << ": ";
+        cin >> arr[i];
+    }
 }
 
-void PrintArray(const int* array, int size)
+void PrintArray(const int* arr, int size)
 {
     for (int i = 0; i < size; i++)
-        cout << array[i] << ' ';
+        cout << arr[i] << " ";
     cout << '\n';
 }
 
-void DeleteArray(int* array)
+void FreeArray(int*& arr)
 {
-    delete[] array;
+    delete[] arr;
+    arr = nullptr;
 }
 
-int* AppendElement(int* array, int& size, int value)
+void AppendElement(int*& arr, int& size, int value)
 {
-    int* result = new int[size + 1];
+    int* newArr = new int[size + 1];
+
     for (int i = 0; i < size; i++)
-        result[i] = array[i];
-    result[size] = value;
-    DeleteArray(array);
+        newArr[i] = arr[i];
+
+    newArr[size] = value;
+
+    delete[] arr;
+    arr = newArr;
     size++;
-    return result;
 }
 
-int* InsertElement(int* array, int& size, int index, int value)
+void InsertElement(int*& arr, int& size, int index, int value)
 {
-    if (index < 0 || index > size)
-        return array;
+    if (index < 0 || index > size) return;
 
-    int* result = new int[size + 1];
+    int* newArr = new int[size + 1];
+
     for (int i = 0; i < index; i++)
-        result[i] = array[i];
-    result[index] = value;
+        newArr[i] = arr[i];
+
+    newArr[index] = value;
+
     for (int i = index; i < size; i++)
-        result[i + 1] = array[i];
+        newArr[i + 1] = arr[i];
 
-    DeleteArray(array);
+    delete[] arr;
+    arr = newArr;
     size++;
-    return result;
 }
 
-int* RemoveElement(int* array, int& size, int index)
+void DeleteElement(int*& arr, int& size, int index)
 {
-    if (index < 0 || index >= size)
-        return array;
+    if (index < 0 || index >= size) return;
 
-    int* result = new int[size - 1];
-    for (int i = 0; i < index; i++)
-        result[i] = array[i];
-    for (int i = index + 1; i < size; i++)
-        result[i - 1] = array[i];
+    int* newArr = CreateArray(size - 1);
 
-    DeleteArray(array);
+    for (int i = 0, j = 0; i < size; i++)
+    {
+        if (i != index)
+            newArr[j++] = arr[i];
+    }
+
+    delete[] arr;
+    arr = newArr;
     size--;
-    return result;
 }
 
 bool IsPrime(int number)
 {
-    if (number < 2)
-        return false;
-    for (int divisor = 2; divisor <= number / divisor; divisor++)
-        if (number % divisor == 0)
+    if (number < 2) return false;
+
+    for (int i = 2; i <= number / i; i++)
+    {
+        if (number % i == 0)
             return false;
+    }
+
     return true;
 }
 
-int* RemovePrimes(const int* array, int size, int& newSize)
+int* RemovePrimes(const int* arr, int size, int& newSize)
 {
     newSize = 0;
+
     for (int i = 0; i < size; i++)
-        if (!IsPrime(array[i]))
+    {
+        if (!IsPrime(arr[i]))
             newSize++;
+    }
 
-    int* result = new int[newSize];
+    int* newArr = CreateArray(newSize);
     int index = 0;
-    for (int i = 0; i < size; i++)
-        if (!IsPrime(array[i]))
-            result[index++] = array[i];
 
-    return result;
+    for (int i = 0; i < size; i++)
+    {
+        if (!IsPrime(arr[i]))
+            newArr[index++] = arr[i];
+    }
+
+    return newArr;
 }
 
-void SplitBySign(const int* array, int size,
-    int* positive, int& positiveSize,
-    int* negative, int& negativeSize,
-    int* zeros, int& zeroSize)
+void SplitArray(const int* arr, int size,
+    int*& positive, int& positiveSize,
+    int*& negative, int& negativeSize,
+    int*& zeros, int& zeroSize)
 {
     positiveSize = 0;
     negativeSize = 0;
@@ -105,85 +126,86 @@ void SplitBySign(const int* array, int size,
 
     for (int i = 0; i < size; i++)
     {
-        if (array[i] > 0) positive[positiveSize++] = array[i];
-        else if (array[i] < 0) negative[negativeSize++] = array[i];
-        else zeros[zeroSize++] = array[i];
+        if (arr[i] > 0) positiveSize++;
+        else if (arr[i] < 0) negativeSize++;
+        else zeroSize++;
+    }
+
+    positive = CreateArray(positiveSize);
+    negative = CreateArray(negativeSize);
+    zeros = CreateArray(zeroSize);
+
+    int p = 0, n = 0, z = 0;
+
+    for (int i = 0; i < size; i++)
+    {
+        if (arr[i] > 0)
+            positive[p++] = arr[i];
+        else if (arr[i] < 0)
+            negative[n++] = arr[i];
+        else
+            zeros[z++] = arr[i];
     }
 }
 
 int main()
 {
     // Task 1
-    int size;
-    cout << "Enter dynamic array size: ";
-    cin >> size;
-    if (!cin || size < 0) return 1;
+    int size = 5;
+    int* arr = CreateArray(size);
 
-    int* array = AllocateArray(size);
-    cout << "Enter " << size << " elements: ";
-    InitializeArray(array, size);
+    InitializeArray(arr, size);
+    PrintArray(arr, size);
 
-    cout << "Initial array: ";
-    PrintArray(array, size);
+    AppendElement(arr, size, 100);
+    PrintArray(arr, size);
 
-    int value, index;
-    cout << "Value to append: ";
-    cin >> value;
-    array = AppendElement(array, size, value);
-    cout << "After append: ";
-    PrintArray(array, size);
+    InsertElement(arr, size, 2, 50);
+    PrintArray(arr, size);
 
-    cout << "Index (0.." << size << ") and value to insert: ";
-    cin >> index >> value;
-    if (index < 0 || index > size)
-        cout << "Invalid insertion index\n";
-    else
-        array = InsertElement(array, size, index, value);
-    cout << "After insertion: ";
-    PrintArray(array, size);
+    DeleteElement(arr, size, 1);
+    PrintArray(arr, size);
 
-    cout << "Index (0.." << size - 1 << ") to remove: ";
-    cin >> index;
-    if (index < 0 || index >= size)
-        cout << "Invalid removal index\n";
-    else
-        array = RemoveElement(array, size, index);
-    cout << "After removal: ";
-    PrintArray(array, size);
+    FreeArray(arr);
 
     // Task 2
-    int withoutPrimesSize;
-    int* withoutPrimes = RemovePrimes(array, size, withoutPrimesSize);
-    cout << "Array without prime numbers: ";
-    PrintArray(withoutPrimes, withoutPrimesSize);
+    int size2 = 10;
+    int* arr2 = new int[size2] { 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 };
+
+    int newSize = 0;
+    int* result = RemovePrimes(arr2, size2, newSize);
+
+    cout << "Without prime numbers: ";
+    PrintArray(result, newSize);
+
+    FreeArray(arr2);
+    FreeArray(result);
 
     // Task 3
-    const int staticArray[] = { 5, -2, 0, 7, -8, 0, 11, -4, 3, 0 };
-    const int staticSize = sizeof(staticArray) / sizeof(staticArray[0]);
+    const int size3 = 10;
+    int arr3[size3] = { 5, -3, 0, 8, -7, 0, 2, -1, 0, 9 };
 
-    int* positive = new int[staticSize];
-    int* negative = new int[staticSize];
-    int* zeros = new int[staticSize];
+    int* positive = nullptr;
+    int* negative = nullptr;
+    int* zeros = nullptr;
+
     int positiveSize, negativeSize, zeroSize;
 
-    SplitBySign(staticArray, staticSize,
+    SplitArray(arr3, size3,
         positive, positiveSize,
         negative, negativeSize,
         zeros, zeroSize);
 
     cout << "Positive: ";
     PrintArray(positive, positiveSize);
+
     cout << "Negative: ";
     PrintArray(negative, negativeSize);
-    cout << "Zero: ";
+
+    cout << "Zeros: ";
     PrintArray(zeros, zeroSize);
 
-    DeleteArray(array);
-    array = nullptr;
-    DeleteArray(withoutPrimes);
-    withoutPrimes = nullptr;
-    DeleteArray(positive);
-    DeleteArray(negative);
-    DeleteArray(zeros);
-    return 0;
+    FreeArray(positive);
+    FreeArray(negative);
+    FreeArray(zeros);
 }
